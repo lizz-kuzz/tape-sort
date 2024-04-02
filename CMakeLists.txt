@@ -3,9 +3,9 @@ project(external_tape_sort)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "-Wall -g3 -Wextra")
+set(CMAKE_CXX_FLAGS "-Wzero-as-null-pointer-constant -Wall -g3 -Wextra")
 
-option(BUILD_TEST BOOL ON)
+option(BUILD_TEST BOOL OFF)
 option(BUILD_MAIN BOOL ON)
 
 
@@ -23,6 +23,9 @@ if(BUILD_TEST)
   
   add_executable(
     external_sort_test
+    src/generate_test.cpp
+    src/external_sort.cpp
+    src/tape.cpp
     src/external_sort_test.cpp
   )
   
@@ -44,6 +47,7 @@ if (BUILD_MAIN)
     src/main.cpp
     src/external_sort.cpp
     src/tape.cpp
+    src/generate_test.cpp
   )
 
   target_include_directories(main PUBLIC include)
