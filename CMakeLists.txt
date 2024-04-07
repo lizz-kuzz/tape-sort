@@ -3,7 +3,7 @@ project(external_tape_sort)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "-Wzero-as-null-pointer-constant -Wall -g3 -Wextra")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 
 option(BUILD_TEST BOOL OFF)
 option(BUILD_MAIN BOOL ON)

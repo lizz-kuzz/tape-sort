@@ -1,23 +1,23 @@
 #pragma once
 
-#include <unistd.h>
-
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <chrono>
+#include <thread>
 
-const double DEFAULT_DELAY = 0.001;
-const double DEFAULT_REWIND = 7;
-
+const size_t DEFAULT_DELAY = 0;
+const size_t DEFAULT_REWIND = 0;
+    
 struct Delay {
-    double write_read;
-    double oneshift;
-    double rewind;
+    size_t write_read;
+    size_t oneshift;
+    size_t rewind;
 
     Delay(const std::string& config_name);
-    Delay(double write_read = DEFAULT_DELAY, double oneshift = DEFAULT_DELAY,
-            double rewind = DEFAULT_REWIND);
+    Delay(size_t write_read = DEFAULT_DELAY, size_t oneshift = DEFAULT_DELAY,
+            size_t rewind = DEFAULT_REWIND);
     ~Delay() = default;
 };
 

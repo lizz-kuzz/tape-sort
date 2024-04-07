@@ -2,23 +2,22 @@
 
 std::string PATH = "../res/";
 
-Tape::Tape(const std::string& file_name)
-     : name_(file_name), delay_() {
-    text_file_to_bin();
+Tape::Tape(const std::string& file_name) : name_(file_name), delay_() {
+  text_file_to_bin();
 
-    binfile_.open(PATH + name_ + ".bin",
-                    std::ios::binary | std::ios::out | std::ios::in);
-    // исключение если не открылся
-    if (!binfile_.is_open()) {
-        std::cout << "fail openning file" << std::endl;
-    }
+  binfile_.open(PATH + name_ + ".bin",
+                std::ios::binary | std::ios::out | std::ios::in);
 
-    size_t temp;
-    if (!(binfile_.read(reinterpret_cast<char*>(&temp), sizeof(temp)))) {
-        //кинуть исключение
-        std::cout << "Write a len of tape at the file's begging" << std::endl;
-    }
-    len = temp;
+  if (!binfile_.is_open()) {
+    throw std::runtime_error("Fail openning file in Tape constructor");
+  }
+
+  size_t temp;
+  if (!(binfile_.read(reinterpret_cast<char*>(&temp), sizeof(temp)))) {
+    throw std::runtime_error("Write a len of tape at the file's begging");
+  }
+
+  len = temp;
 }
 
 // for creating new tapes
@@ -26,19 +25,17 @@ Tape::Tape(const std::string& file_name, size_t len)
         : name_(file_name), len(len), delay_() {
     binfile_.open(PATH + name_ + ".bin", std::ios::trunc | std::ios::binary |
                                             std::ios::out | std::ios::in);
-    // исключение если не открылся
     if (!binfile_.is_open()) {
-        std::cout << "fail openning file" << std::endl;
+        throw std::runtime_error("Fail openning file in Tape constructor");
     }
 
     if (!(binfile_.write(reinterpret_cast<char*>(&len), sizeof(len)))) {
-        //кинуть исключение
-        std::cout << "Error in writing len" << std::endl;
+        throw std::runtime_error("Error in writing len in Tape constructor");
     }
 }
 
 Tape::Tape(const std::string& file_name, const std::string& config_name)
-     : Tape(file_name) {
+        : Tape(file_name) {
     Delay temp(config_name);
     delay_ = temp;
 };
@@ -46,28 +43,25 @@ Tape::Tape(const std::string& file_name, const std::string& config_name)
 Tape::~Tape() { binfile_.close(); }
 
 int32_t Tape::read_tape() {
-  int32_t temp;
-  binfile_.read(reinterpret_cast<char*>(&temp), sizeof(temp));
-  sleep(delay_.write_read);
-  ++cur_position;
-  return temp;
-  // тоже кинуть исключение если ввод неверный
+    int32_t temp;
+    binfile_.read(reinterpret_cast<char*>(&temp), sizeof(temp));
+    std::this_thread::sleep_for(std::chrono::milliseconds(delay_.write_read));
+    ++cur_position;
+    return temp;
 }
 
 void Tape::write_tape(int32_t value) {
-  if (cur_position < len) {
-    binfile_.clear();
-    if (!binfile_.write(reinterpret_cast<char*>(&value), sizeof(value))) {
-      std::cout << "Error in write to tape" << std::endl;
+    if (cur_position <= len) {
+        binfile_.clear();
+        if (!binfile_.write(reinterpret_cast<char*>(&value), sizeof(value))) {
+            throw std::runtime_error("Error in write to tape");
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(delay_.write_read));
+        std::this_thread::sleep_for(std::chrono::milliseconds(delay_.oneshift));
+    } else {
+        throw std::runtime_error("Try to write outside the tape");
     }
-    sleep(delay_.write_read);
-    sleep(delay_.oneshift);
-  } else {
-    // исключение
-  }
-  ++cur_position;
-
-  // тоже кинуть исключение если вывод неверный
+    ++cur_position;
 }
 size_t Tape::get_len() const { return len; }
 
@@ -85,14 +79,14 @@ void Tape::rewind(int pos, std::ios_base::seekdir dir) {
         cur_position = len + pos;
         binfile_.seekg(pos * sizeof(int32_t), dir);
     } else {
-        std::cout << "rewind beyond tape" << std::endl;
+        throw std::runtime_error("Try to rewind beyond tape");
     }
-    sleep(delay_.oneshift * delay_.rewind);
+    std::this_thread::sleep_for(std::chrono::milliseconds(delay_.oneshift * delay_.rewind));
 }
 
 void Tape::copy(Tape& src) {
     if (len != src.get_len()) {
-        // error
+        throw std::runtime_error("Try to copy tapes with different lens");
     } else {
         src.rewind(0, std::ios_base::beg);
         for (size_t i = 0; i < len; ++i) {
@@ -106,14 +100,14 @@ void Tape::text_file_to_bin() {
     file_in.open(PATH + name_);
 
     if (!file_in.is_open()) {
-        std::cout << "fail openning file" << std::endl;
+        throw std::runtime_error("Fail openning file_in in text_file_to_bin()");
     }
 
     std::ofstream file_out;
     file_out.open(PATH + name_ + ".bin", std::ios::binary | std::ios::out);
 
     if (!file_out.is_open()) {
-        std::cout << "fail openning file" << std::endl;
+        throw std::runtime_error("Fail openning file_out in text_file_to_bin()");
     }
 
     size_t temp_len;
@@ -134,7 +128,7 @@ void Tape::bin_file_to_text() {
     file_out.open(PATH + name_);
 
     if (!file_out.is_open()) {
-        std::cout << "fail openning file" << std::endl;
+        throw std::runtime_error("Fail openning file_out in bin_file_to_text()");
     }
     binfile_.clear();
     binfile_.seekg(0, std::ios_base::beg);
@@ -151,13 +145,12 @@ void Tape::bin_file_to_text() {
 Delay::Delay(const std::string& config_name) {
     std::fstream file;
     file.open(PATH + config_name);
-    // исключение если не открылся
     if (!file.is_open()) {
-        std::cout << "fail openning file" << std::endl;
+        throw std::runtime_error("Fail openning config file in Delay constructor");
     }
 
     file >> write_read >> oneshift >> rewind;
 }
 
-Delay::Delay(double write_read, double oneshift, double rewind)
-    : write_read(write_read), oneshift(oneshift), rewind(rewind){};
+Delay::Delay(size_t write_read, size_t oneshift, size_t rewind)
+     : write_read(write_read), oneshift(oneshift), rewind(rewind){};

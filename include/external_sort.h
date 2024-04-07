@@ -10,7 +10,7 @@
 const size_t DEFAULT_RAM_SIZE = 100;
 
 class External_sort {
-public:
+    public:
     External_sort(Tape& input, Tape& output, size_t ram_size = DEFAULT_RAM_SIZE);
     ~External_sort() = default;
     void sort_stage(std::vector<int32_t>& ram_memory, size_t& i);
@@ -18,7 +18,7 @@ public:
                     size_t& i);
     int tape();
 
-private:
+    private:
     Tape& input_;
     Tape& output_;
     size_t ram_size;
